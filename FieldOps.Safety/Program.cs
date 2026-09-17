@@ -45,6 +45,13 @@ using (var scope = app.Services.CreateScope())
     db.Database.EnsureCreated();
 }
 
+app.MapGet("/", () => Results.Ok(new
+{
+    service = "fieldops-safety-api",
+    status = "running",
+    message = "API activa. Consulta /health o /api/incidents."
+}));
+
 app.MapGet("/health", () => Results.Ok(new { service = "fieldops-safety-api", status = "ok" }));
 
 app.MapGet("/api/incidents", (IIncidentStore store, IncidentStatus? status) =>
