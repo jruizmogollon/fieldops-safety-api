@@ -1,13 +1,49 @@
 using System.Text.Json.Serialization;
 using FieldOps.Safety.Application;
 using FieldOps.Safety.Domain;
+using FieldOps.Safety.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-builder.Services.AddSingleton<IIncidentStore, InMemoryIncidentStore>();
+
+var databaseProvider = builder.Configuration["DatabaseProvider"]?.Trim().ToLowerInvariant() ?? "sqlite";
+var connectionString = builder.Configuration.GetConnectionString("Default");
+
+switch (databaseProvider)
+{
+    case "sqlite":
+        builder.Services.AddDbContext<IncidentDbContext>(options =>
+            options.UseSqlite(connectionString ?? "Data Source=fieldops.db"));
+        break;
+
+    case "postgres":
+    case "postgresql":
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException(
+                "Configura ConnectionStrings:Default para usar PostgreSQL o Supabase.");
+        }
+
+        builder.Services.AddDbContext<IncidentDbContext>(options =>
+            options.UseNpgsql(connectionString));
+        break;
+
+    default:
+        throw new InvalidOperationException(
+            $"Proveedor de base de datos no reconocido: {databaseProvider}.");
+}
+
+builder.Services.AddScoped<IIncidentStore, EfIncidentStore>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<IncidentDbContext>();
+    db.Database.EnsureCreated();
+}
 
 app.MapGet("/health", () => Results.Ok(new { service = "fieldops-safety-api", status = "ok" }));
 

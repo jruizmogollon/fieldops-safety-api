@@ -2,5 +2,9 @@ bin/
 obj/
 .vs/
 .idea/
+.vscode/
+*.db
+*.db-shm
+*.db-wal
 *.user
 *.suo
