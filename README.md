@@ -9,7 +9,7 @@ API pequeña para registrar incidentes de seguridad en operaciones de campo. La 
 - Configuración opcional para PostgreSQL o Supabase.
 - Validación de datos y cambio de estados.
 - Separación entre la API, el dominio y la persistencia.
-- Pruebas automatizadas con xUnit.
+- Pruebas unitarias y pruebas HTTP con xUnit.
 
 ## Ejecutar sin Supabase
 
